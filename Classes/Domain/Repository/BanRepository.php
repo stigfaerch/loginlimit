@@ -74,14 +74,17 @@ class BanRepository extends AbstractRepository
         $table = $this->getTable();
         $queryBuilder = $this->instantiateQueryBuilderForTable($table);
 
+        $or = $queryBuilder->expr()->orX();
+        $or->add($queryBuilder->expr()
+            ->eq('ip', $queryBuilder->createNamedParameter($ip)));
+        $or->add($queryBuilder->expr()
+            ->eq('username', $queryBuilder->createNamedParameter($username)));
+        
         $queryBuilder
             ->select('*')
             ->from($table)
-            ->where(
-                $queryBuilder->expr()->eq('ip', $queryBuilder->createNamedParameter($ip)),
-                $queryBuilder->expr()->eq('username', $queryBuilder->createNamedParameter($username))
-            );
-
+            ->where($or);
+        
         if ($bantime >= 0) {
             $queryBuilder->andWhere(
                 $queryBuilder->expr()->gte('tstamp', $queryBuilder->createNamedParameter($GLOBALS['EXEC_TIME'] - (int)$bantime, \PDO::PARAM_INT))
